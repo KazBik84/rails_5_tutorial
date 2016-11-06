@@ -22,5 +22,7 @@ class UserSignupTest < ActionDispatch::IntegrationTest
     end
     follow_redirect!
     assert_template 'users/show'
+    # is_logged_in? is defined in the test_helper
+    assert is_logged_in?
   end
 end
