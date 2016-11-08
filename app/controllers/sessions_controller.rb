@@ -9,7 +9,8 @@ class SessionsController < ApplicationController
       log_in user
       #Remember(user) and forget(user) are defined in the sessions_helper,
       params[:session][:remember_me] == '1' ? remember(user) : forget(user)
-      redirect_to user
+      #redirect_back_or function is defined in the session helper
+      redirect_back_or user
     else
       flash.now[:danger] = 'Invalid email/password combination'
       render 'new'
