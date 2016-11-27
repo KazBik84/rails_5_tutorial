@@ -9,9 +9,22 @@ class User < ApplicationRecord
                     format: { with: VALID_EMAIL_REGEX },
                     uniqueness: { case_sensitive: false }
   validates :password, presence: true, length: { minimum: 6 }, allow_nil: true
+
   has_secure_password
 
+  # Creates virtual active relationships objects, based on the relationship
+  #  model, and when creating it fills the follower_id with the id of the current user
+  has_many :active_relationships, class_name: 'Relationship',
+                                  foreign_key: 'follower_id',
+                                  dependent: :destroy
+
+  has_many :passive_relationships, class_name: 'Relationship',
+                                   foreign_key: 'followed_id',
+                                   dependent: :destroy
   has_many :microposts, dependent: :destroy
+  # Creates the relation, called following which points to the followed attribute
+  has_many :following, through: :active_relationships, source: :followed
+  has_many :followers, through: :passive_relationships, source: :follower
 
 
   #returns the hash digest of the given string
@@ -72,6 +85,18 @@ class User < ApplicationRecord
 
   def feed
     Micropost.where('user_id = ?', id)
+  end
+
+  def follow(other_user)
+        active_relationships.create(followed_id: other_user.id)
+  end
+
+  def unfollow(other_user)
+    active_relationships.find_by(followed_id: other_user.id).destroy
+  end
+
+  def following?(other_user)
+    following.include?(other_user)
   end
 
   private
