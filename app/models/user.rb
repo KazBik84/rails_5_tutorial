@@ -84,11 +84,22 @@ class User < ApplicationRecord
   end
 
   def feed
-    Micropost.where('user_id = ?', id)
+    #Simple feed implementation not good scaling
+    # Micropost.where(" user_id IN (?) OR user_id = ?", following_ids, id) 
+
+    #Other version of the prev implementation
+    #Micropost.where('user_id IN (:following_ids) OR user_id = :user_id', 
+    #  following_ids: following_ids, user_id: id)
+
+    # SQL fast feed implementation
+    following_ids = "SELECT followed_id FROM relationships
+                      WHERE follower_id = :user_id"
+    Micropost.where("user_id IN (#{following_ids})
+                      OR user_id = :user_id", user_id: id)
   end
 
   def follow(other_user)
-        active_relationships.create(followed_id: other_user.id)
+    active_relationships.create(followed_id: other_user.id)
   end
 
   def unfollow(other_user)
